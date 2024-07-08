@@ -58,3 +58,8 @@ function get_modelspec(name::String)
     # DataFrames.DataFrame
     return ADRIA.model_spec(rs)
 end
+
+function get_scenarios(name::String)
+    rs = get_resultset(name)
+    return rs.inputs
+end

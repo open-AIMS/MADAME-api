@@ -18,7 +18,9 @@ end
     return json(get_modelspec(id))
 end
 
-#@get "/resultset/{id}/scenarios"
+@get "/resultset/{id}/scenarios" function(req::HTTP.Request, id::String)
+    return json(get_scenarios(id))
+end
 
 
 # start the web server
