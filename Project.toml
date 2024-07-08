@@ -1,0 +1,10 @@
+name = "MADAME-api"
+uuid = "331e1bc6-fc6a-4f70-abdd-4b2ee626e4e0"
+authors = ["Arlo White <a.white@aims.gov.au>"]
+version = "0.1.0"
+
+[deps]
+ADRIA = "7dc409a7-fbe5-4c9d-b3e2-b0c19a6ba600"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+Oxygen = "df9a0d86-3283-4920-82dc-4555fc0d1d8b"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
