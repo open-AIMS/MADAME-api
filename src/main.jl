@@ -10,6 +10,10 @@ include("adria/resultsets.jl")
     return json(get_resultsets())
 end
 
+@get "/resultset/{id}/info" function(req::HTTP.Request, id::String)
+    return json(get_resultset_info(id))
+end
+
 @get "/resultset/{id}/modelspec" function(req::HTTP.Request, id::String)
     return json(get_modelspec(id))
 end
