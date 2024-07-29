@@ -1,4 +1,6 @@
 import ADRIA
+using Statistics
+using DataFrames
 
 function get_resultsets()
     dir = Base.get_preferences()["resultsets_dir"]
@@ -17,7 +19,10 @@ function get_resultset(name::String)
 end
 
 struct ResultSetInfo
-    store_name::String
+    # Store Name
+    id::String
+    # user-visible name
+    title::String
     # TODO name? aka "Domain"?
     datapkg_name::String
     ## TODO ISO8601
@@ -41,6 +46,7 @@ function get_resultset_info(name::String)
 
     return ResultSetInfo(
         name,
+        name,
         rs.name,
         rs.invoke_time,
         "CoralBlox",
@@ -62,4 +68,19 @@ end
 function get_scenarios(name::String)
     rs = get_resultset(name)
     return rs.inputs
+end
+
+function get_relative_cover(name::String)
+    rs = get_resultset(name)
+    # 1st relative_cover - each functional group
+    #ADRIA.metrics.scenario_relative_cover(rs)
+    rc = ADRIA.metrics.relative_cover(rs)
+
+    # mean relative cover across all time and scenarios
+    all_rc = vec(mean(rc, dims=(:scenarios, :timesteps)))
+    table = select(rs.site_data, :UNIQUE_ID)
+    @assert length(all_rc) == size(table, 1)
+    # assuming that data is aligned, how do we guarantee this?
+    table.relative_cover = all_rc
+    return table
 end

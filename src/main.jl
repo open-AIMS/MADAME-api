@@ -22,6 +22,10 @@ end
     return json(get_scenarios(id))
 end
 
+@get "/resultset/{id}/relative_cover" function(req::HTTP.Request, id::String)
+    return json(get_relative_cover(id))
+end
+
 
 # start the web server
 serve()
