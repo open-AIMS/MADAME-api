@@ -1,5 +1,6 @@
 import ADRIA
 using Statistics
+using YAXArrays
 using DataFrames
 
 function get_resultsets()
@@ -70,17 +71,25 @@ function get_scenarios(name::String)
     return rs.inputs
 end
 
-function get_relative_cover(name::String)
+function get_relative_cover(name::String; timestep = nothing)
     rs = get_resultset(name)
     # 1st relative_cover - each functional group
     #ADRIA.metrics.scenario_relative_cover(rs)
     rc = ADRIA.metrics.relative_cover(rs)
+    rc_vec = nothing
+    if timestep !== nothing
+        rc_vec = mean(rc[timesteps=At(timestep)], dims=(:scenarios))
+        rc_vec = vec(dropdims(rc_vec; dims=:scenarios))
+    else
+        # mean relative cover across all time and scenarios
+        rc_vec = vec(mean(rc, dims=(:scenarios, :timesteps)))
+    end
 
-    # mean relative cover across all time and scenarios
-    all_rc = vec(mean(rc, dims=(:scenarios, :timesteps)))
     table = select(rs.site_data, :UNIQUE_ID)
-    @assert length(all_rc) == size(table, 1)
+    @assert length(rc_vec) == size(table, 1)
     # assuming that data is aligned, how do we guarantee this?
-    table.relative_cover = all_rc
-    return table
+    table.relative_cover = rc_vec
+
+    # mean(relative_cover); groupby UNIQUE_ID
+    return combine(groupby(table, :UNIQUE_ID), :relative_cover => mean)
 end

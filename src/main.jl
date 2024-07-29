@@ -22,8 +22,8 @@ end
     return json(get_scenarios(id))
 end
 
-@get "/resultset/{id}/relative_cover" function(req::HTTP.Request, id::String)
-    return json(get_relative_cover(id))
+@get "/resultset/{id}/relative_cover" function(req::HTTP.Request, id::String, timestep::Union{Int64, Nothing} = nothing)
+    return json(get_relative_cover(id; timestep=timestep))
 end
 
 
