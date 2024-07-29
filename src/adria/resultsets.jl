@@ -91,5 +91,6 @@ function get_relative_cover(name::String; timestep = nothing)
     table.relative_cover = rc_vec
 
     # mean(relative_cover); groupby UNIQUE_ID
-    return combine(groupby(table, :UNIQUE_ID), :relative_cover => mean)
+    # this syntax prevents auto-rename to relative_cover_mean
+    return combine(groupby(table, :UNIQUE_ID), :relative_cover => mean => :relative_cover)
 end
