@@ -2,6 +2,7 @@ import ADRIA
 using Statistics
 using YAXArrays
 using DataFrames
+using Caching
 
 function get_resultsets()
     dir = Base.get_preferences()["resultsets_dir"]
@@ -9,7 +10,10 @@ function get_resultsets()
     return resultsets
 end
 
-function get_resultset(name::String)
+# PERF this cache allows simultaneous entry into function
+# ideally would block other thread and only calculate once
+@cache function get_resultset(name::String)
+    @debug "get_resultset $(name)"
     dir = Base.get_preferences()["resultsets_dir"]
     path = joinpath(dir, name)
     if !isdir(path)
