@@ -34,6 +34,8 @@ end
     end
 end
 
+include("routing/model_run.jl")
+
 
 # start the web server
 serve()
