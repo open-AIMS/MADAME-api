@@ -83,7 +83,7 @@ function get_relative_cover(name::String)
     # mean relative cover across all time and scenarios
     rc_vec = vec(mean(rc, dims=(:scenarios, :timesteps)))
 
-    table = select(rs.site_data, :UNIQUE_ID)
+    table = select(rs.loc_data, :UNIQUE_ID)
     @assert length(rc_vec) == size(table, 1)
     # assuming that data is aligned, how do we guarantee this?
     table.relative_cover = rc_vec
@@ -102,7 +102,7 @@ function get_relative_cover(name::String, timestep::Union{Int64, UnitRange{Int64
 
     rc_vec = vec(dropdims(rc_vec; dims=(:scenarios, :timesteps)))
 
-    table = select(rs.site_data, :UNIQUE_ID)
+    table = select(rs.loc_data, :UNIQUE_ID)
     @assert length(rc_vec) == size(table, 1)
     # assuming that data is aligned, how do we guarantee this?
     table.relative_cover = rc_vec

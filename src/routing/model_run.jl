@@ -2,6 +2,8 @@ using Bonito
 using WGLMakie, GeoMakie, GraphMakie
 using Oxygen: html # Bonito also exports html
 
+include("../adria/resultsets.jl")
+
 # Force inlining of all data and JS dependencies
 Page(exportable=true, offline=true)
 # WGLMakie.activate!()
@@ -71,20 +73,4 @@ end
 
     # return Page(export_fig(f))
     return html(ADRIA.viz.scenarios(rs, r_tac))
-end
-
-
-@get "/test-viz" function (req)
-    fig = Figure()
-    ax = Axis(fig[1,1])
-    scatter!(ax, rand(100), rand(100))
-
-    # Create and return a Bonito App
-    app = App() do session
-        return DOM.div(
-            fig
-        )
-    end
-
-    return html(app)
 end

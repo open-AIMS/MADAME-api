@@ -35,6 +35,7 @@ end
 end
 
 include("routing/model_run.jl")
+include("routing/viz.jl")
 
 
 # start the web server
