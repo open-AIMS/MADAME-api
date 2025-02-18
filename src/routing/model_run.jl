@@ -4,52 +4,71 @@ using Oxygen: html # Bonito also exports html
 
 include("../adria/resultsets.jl")
 
-# Force inlining of all data and JS dependencies
-Page(exportable=true, offline=true)
-# WGLMakie.activate!()
-Makie.inline!(true)
-Makie.set_theme!(WGLMakie=(framerate=25, ))
+"""
+    ModelParam
 
-# Form for testing/dev
-@get "/deployment-setting" function ()
-    # Should extract control/bounds from ADRIA.model_spec()
-    # Changing model-choice should auto-refresh/populate with the relevant deployment controls
-    return html("""
-    <form action="/invoke-run/coralblox" method="post">
-        <label for="model-choice">Model/location to run:</label><br>
-        <input type="text" id="model-choice" name="model-option" value="This does nothing right now"><br>
+Represents a model parameter and the parametrisation of its sampling distribution. Currently,
+parameter are either drawn from some type of uniform or triangular distribution.
 
-        <label for="scenario-name">Scenario name:</label><br>
-        <input type="text" id="scenario-name" name="run"><br>
+# Fields
+- `param_name::Stirng`: name of the parameter in the domain model spec.
+- `third_param_flag::Bool`: true if sampling distribution uses the third parametera.
+- `lower::Float64`: Lower bound parameter of the sampling distribution.
+- `upper::Float64`: Upper bound parameter of the sampling distrbition.
+- `optional_third::Float64`: Third parameter of the sampling distribution.
+"""
+struct ModelParam
+    param_name::String
+    third_param_flag::Bool
+    lower::Float64
+    upper::Float64
+    optional_third::Float64
+end
 
-        <label for="ssps">Representative Concentration Pathways:</label><br>
-        <input type="text" id="scenario-name" name="RCP" value="This does nothing, but could be one or more SSPs/RCPs"><br>
+"""
+    InvokeRunResponse
 
-        <label for="scenario-set-size">Scenario set size:</label><br>
-        <input type="text" id="scenario-set-size" name="scenario-runs" value="32"><br><br>
+Expected response structure of a invoke run post request.
 
-        <label for="seed-TA-lb">Seeding Tabular Acropora Lower Bound:</label><br>
-        <input type="text" id="seed-TA-lb" name="seed-TA-lower_bound" value="100000"><br><br>
+# Fields
+- `run_name::String`: Name of model run and directory to store.
+- `num_scenarios::Int64`: Number of scenarios to run.
+- `model_params::Vector{ModelParam}`: List of model parameters to set the sampling distriburtion for.
+"""
+struct InvokeRunResponse
+    run_name::String
+    num_scenarios::Int64
+    model_params::Vector{ModelParam}
+end
 
-        <label for="seed-TA-ub">Seeding Tabular Acropora Upper Bound:</label><br>
-        <input type="text" id="seed-TA-ub" name="seed-TA-upper_bound" value="1000000"><br><br>
+"""
+    model_param_to_tuple(model_param::ModelParam)::Tuple
 
-        <input type="submit" value="Submit">
-    </form>
-    """)
+Convert the model parameter struct a tuple the can be pased to the ADRIA set_factor_bounds
+function.
+"""
+function model_param_to_tuple(model_param::ModelParam)::Tuple
+    if model_param.third_param_flag
+        return (model_param.lower, model_param.upper, model_param.optional_third)
+    else
+        return (model_param.lower, model_param.upper)
+    end
 end
 
 function run_coral_blox(
-    ta_lower,
-    ta_upper,
-    step_size,
-    n_runs
+    n_runs::Int64,
+    model_params::Vector{ModelParam}
 )::ADRIA.ResultSet
 
     default_domain_dir = Base.get_preferences()["default_domain"]
     dom = ADRIA.load_domain(default_domain_dir, "45")
 
-    ADRIA.set_factor_bounds(dom, N_seed_TA=(ta_lower, ta_upper, step_size))
+    # Set the distribution parametrisation defined by the user.
+    ADRIA.set_factor_bounds.(
+        Ref(dom), 
+        Symbol.(getfield.(model_params, :param_name)), 
+        model_param_to_tuple.(model_params)
+    )
 
     scens = ADRIA.sample(dom, n_runs)
     rs = ADRIA.run_scenarios(dom, scens, "45")
@@ -57,22 +76,50 @@ function run_coral_blox(
     return rs
 end
 
+"""
+    default_save_name(rs::ADRIA.ResultSet)::String
+
+ADRIA currently saves results to a directory without accepting use defined location. This 
+function reconstructs the directory name to allow the api to move the directory.
+"""
 function default_save_name(rs::ADRIA.ResultSet)::String
     return "$(rs.name)__RCPs_$(rs.RCP)__$(rs.invoke_time)"
 end
 
-# Parse the form data and return it
-@post "/form" function (req)
-    data = formdata(req)
-    return data
-end
+"""
+    @post "/invoke-run/coralblox" function (req)
 
+Endpoint to allow the end user to invoke model runs. The request body should be json of the 
+following form.
+
+# Example
+```json
+{
+  "run_name": <run_name>,
+  "num_scenarios": <num_scenarios>,
+  "model_params": [
+    {
+      "param_name": name,
+      "third_param_flag": <Boolean>,
+      "lower": <lower>,
+      "upper": <upper>,
+      "optional_third": 
+    },
+    ...
+  ]
+}
+```
+"""
 @post "/invoke-run/coralblox" function (req)
     println(req)
-    data = json(req)["params"]
+    response = json(req, InvokeRunResponse)
+
+    if isnothing(response)
+        return HTTP.Response(400, "Incorrectly formatted response.")
+    end
 
     # Parse and validate inputs
-    scenario_name = get(data, "runName", nothing)
+    scenario_name = response.run_name
 
     res_dir = Base.get_preferences()["resultsets_dir"]
     new_path = joinpath(res_dir, scenario_name)
@@ -81,16 +128,9 @@ end
         return HTTP.Response(400, "Model Run name already used.")
     end
 
-    n_runs = parse(Int, get(data, "numScenarios", "64"))
-    n_runs <= 0 && error("Scenario set size must be positive and a power of 2")
-
-    ta_lower = parse(Float64, get(data, "ta_lower", "100000"))
-    ta_upper = parse(Float64, get(data, "ta_upper", "1000000"))
-    step_size = floor(Int64, (ta_upper - ta_lower) / 10)
-
     # TODO: If user provides a list of SSPs/RCPs to run, have to loop and combine results
     #       at the end.
-    rs = run_coral_blox(ta_lower, ta_upper, step_size, n_runs)
+    rs = run_coral_blox(response.num_scenarios, response.model_params)
 
     default_path = joinpath(res_dir, default_save_name(rs))
     
