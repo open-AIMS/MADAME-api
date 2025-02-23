@@ -1,12 +1,6 @@
 using Bonito
-using WGLMakie, GeoMakie, GraphMakie
+using PlotlyLight
 using Oxygen: html # Bonito also exports html
-
-# Force inlining of all data and JS dependencies
-Page(exportable=true, offline=true)
-# WGLMakie.activate!()
-Makie.inline!(true)
-Makie.set_theme!(WGLMakie=(framerate=25, ))
 
 # Form for testing/dev
 @get "/deployment-setting" function ()
@@ -67,24 +61,28 @@ end
     rs = ADRIA.run_scenarios(dom, scens, "45")
 
     r_tac = ADRIA.metrics.scenario_total_cover(rs)
-    # f = ADRIA.viz.scenarios(rs, r_tac)
+    p = ADRIA.viz.scenarios(rs, r_tac)
 
-    # return Page(export_fig(f))
-    return html(ADRIA.viz.scenarios(rs, r_tac))
+    f = tempname()
+    PlotlyLight.save(p, f)
+
+    io = open(f, "r") do file
+        read(file, String)
+    end
+
+    return HTTP.Response(200, ["Content-Type" => "text/html; charset=utf-8"], body=io)
 end
 
 
 @get "/test-viz" function (req)
-    fig = Figure()
-    ax = Axis(fig[1,1])
-    scatter!(ax, rand(100), rand(100))
+    p = plot(x = 1:20, y = cumsum(randn(20)), type="scatter", mode="lines+markers")
 
-    # Create and return a Bonito App
-    app = App() do session
-        return DOM.div(
-            fig
-        )
+    f = tempname()
+    PlotlyLight.save(p, f)
+
+    io = open(f, "r") do file
+        read(file, String)
     end
 
-    return html(app)
+    return HTTP.Response(200, ["Content-Type" => "text/html; charset=utf-8"], body=io)
 end
