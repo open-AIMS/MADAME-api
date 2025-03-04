@@ -20,3 +20,4 @@ YAXArrays = "c21b50f5-aa40-41ea-b809-c0f5e47bfa5c"
 
 [compat]
 Bonito = "4.0.1"
+DiskArrays = "0.4.9"

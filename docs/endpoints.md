@@ -1,4 +1,4 @@
-## Invokeing Model Runs
+## Invoking Model Runs
 
 ```julia
     @post "/invoke-run/coralblox" function (req)
