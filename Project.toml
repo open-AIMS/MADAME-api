@@ -5,13 +5,19 @@ version = "0.1.0"
 
 [deps]
 ADRIA = "7dc409a7-fbe5-4c9d-b3e2-b0c19a6ba600"
+Bonito = "824d6782-a2ef-11e9-3a09-e5662e0c26f8"
 Caching = "68ad905a-5087-500a-aae7-0fd6acda2eb1"
+CoralBlox = "f00a6e10-004a-11ef-3676-67ec635bc1a2"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DiskArrays = "3c3547ce-8d99-4f5e-a174-61eb10b00ae3"
+GeoMakie = "db073c08-6b98-4ee5-b6a4-5efafb3259c6"
+GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 Oxygen = "df9a0d86-3283-4920-82dc-4555fc0d1d8b"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
 YAXArrays = "c21b50f5-aa40-41ea-b809-c0f5e47bfa5c"
 
 [compat]
-DiskArrays = "0.3.22"
+Bonito = "4.0.1"
+DiskArrays = "0.4.9"

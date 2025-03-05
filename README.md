@@ -12,7 +12,8 @@ Used by [MADAME-app](https://github.com/open-AIMS/MADAME-app).
 Edit `LocalPreferences.toml`, set `resultsets_dir` to your ADRIA.jl Outputs (or wherever you have resultsets)
 
 Example:
-```
+
+```toml
 resultsets_dir = "C:\\Users\\awhite\\code\\ADRIA.jl\\sandbox\\Outputs"
 ```
 
