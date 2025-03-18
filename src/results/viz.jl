@@ -1,9 +1,8 @@
 using Bonito
 using WGLMakie, GeoMakie, GraphMakie
-using Oxygen: html # Bonito also exports html
+using Oxygen: html
 
-# Repition could probably removed with some macro
-function set_result_viz_routes()
+function setup_result_viz_routes()
     @get "/resultsets/{id}/plot/relative_cover" function(req::HTTP.Request, id::String, timestep::Union{Int64, String, Nothing} = nothing)
         rs = get_resultset(id)
         s_rc = ADRIA.metrics.scenario_relative_cover(rs)
@@ -76,4 +75,5 @@ function set_result_viz_routes()
         end
         return html(app)
     end
+    return nothing
 end

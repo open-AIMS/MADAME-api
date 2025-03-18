@@ -1,4 +1,4 @@
-include("../adria/resultsets.jl")
+using MADAMEAPI
 
 """
     ModelParam
@@ -82,31 +82,34 @@ function default_save_name(rs::ADRIA.ResultSet)::String
     return "$(rs.name)__RCPs_$(rs.RCP)__$(rs.invoke_time)"
 end
 
-@post "/invoke-run/coralblox" function (req)
-    println(req)
-    response = json(req, InvokeRunResponse)
+function setup_model_run_invokation_routes()
+    @post "/invoke-run/coralblox" function (req)
+        println(req)
+        response = json(req, InvokeRunResponse)
 
-    if isnothing(response)
-        return HTTP.Response(400, "Incorrectly formatted response.")
+        if isnothing(response)
+            return HTTP.Response(400, "Incorrectly formatted response.")
+        end
+
+        # Parse and validate inputs
+        scenario_name = response.run_name
+
+        res_dir = Base.get_preferences()["resultsets_dir"]
+        new_path = joinpath(res_dir, scenario_name)
+
+        if isdir(new_path)
+            return HTTP.Response(400, "Model Run name already used.")
+        end
+
+        # TODO: If user provides a list of SSPs/RCPs to run, have to loop and combine results
+        #       at the end.
+        rs = run_coral_blox(response.num_scenarios, response.model_params)
+
+        default_path = joinpath(res_dir, default_save_name(rs))
+        
+        mv(default_path, new_path)
+        # return Page(export_fig(f))
+        return json(:run_name => scenario_name)
     end
-
-    # Parse and validate inputs
-    scenario_name = response.run_name
-
-    res_dir = Base.get_preferences()["resultsets_dir"]
-    new_path = joinpath(res_dir, scenario_name)
-
-    if isdir(new_path)
-        return HTTP.Response(400, "Model Run name already used.")
-    end
-
-    # TODO: If user provides a list of SSPs/RCPs to run, have to loop and combine results
-    #       at the end.
-    rs = run_coral_blox(response.num_scenarios, response.model_params)
-
-    default_path = joinpath(res_dir, default_save_name(rs))
-    
-    mv(default_path, new_path)
-    # return Page(export_fig(f))
-    return json(:run_name => scenario_name)
+    return nothing
 end
