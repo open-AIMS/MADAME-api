@@ -11,8 +11,6 @@ using
 
 using ADRIA
 
-
-
 function get_resultsets()
     dir = Base.get_preferences()["resultsets_dir"]
     resultsets = [f for f in readdir(dir)]
@@ -89,7 +87,7 @@ function get_relative_cover(name::String)
     rc = ADRIA.metrics.relative_cover(rs)
 
     # mean relative cover across all time and scenarios
-    rc_vec = vec(mean(rc, dims=(:scenarios, :timesteps)))
+    rc_vec = vec(mean(rc; dims=(:scenarios, :timesteps)))
 
     table = DataFrames.select(rs.loc_data, :UNIQUE_ID)
     @assert length(rc_vec) == size(table, 1)
@@ -100,13 +98,13 @@ function get_relative_cover(name::String)
     # this syntax prevents auto-rename to relative_cover_mean
     return combine(groupby(table, :UNIQUE_ID), :relative_cover => mean => :relative_cover)
 end
-function get_relative_cover(name::String, timestep::Union{Int64, UnitRange{Int64}})
+function get_relative_cover(name::String, timestep::Union{Int64,UnitRange{Int64}})
     rs = get_resultset(name)
     rc = ADRIA.metrics.relative_cover(rs)
 
     # mean across timesteps when it's a range.
     dims = timestep isa UnitRange ? (:scenarios, :timesteps) : (:scenarios)
-    rc_vec = mean(rc[timesteps=At(timestep)], dims=dims)
+    rc_vec = mean(rc[timesteps=At(timestep)]; dims=dims)
 
     rc_vec = vec(dropdims(rc_vec; dims=(:scenarios, :timesteps)))
 
@@ -121,23 +119,25 @@ function get_relative_cover(name::String, timestep::Union{Int64, UnitRange{Int64
 end
 
 function setup_result_metadata_routes()
-    @get "/resultsets" function(req::HTTP.Request)
+    @get "/resultsets" function (req::HTTP.Request)
         return json(get_resultsets())
     end
 
-    @get "/resultset/{id}/info" function(req::HTTP.Request, id::String)
+    @get "/resultset/{id}/info" function (req::HTTP.Request, id::String)
         return json(get_resultset_info(id))
     end
 
-    @get "/resultset/{id}/modelspec" function(req::HTTP.Request, id::String)
+    @get "/resultset/{id}/modelspec" function (req::HTTP.Request, id::String)
         return json(get_modelspec(id))
     end
 
-    @get "/resultset/{id}/scenarios" function(req::HTTP.Request, id::String)
+    @get "/resultset/{id}/scenarios" function (req::HTTP.Request, id::String)
         return json(get_scenarios(id))
     end
 
-    @get "/resultset/{id}/relative_cover" function(req::HTTP.Request, id::String, timestep::Union{Int64, String, Nothing} = nothing)
+    @get "/resultset/{id}/relative_cover" function (
+        req::HTTP.Request, id::String, timestep::Union{Int64,String,Nothing}=nothing
+    )
         if isnothing(timestep)
             return json(get_relative_cover(id))
         elseif timestep isa String
