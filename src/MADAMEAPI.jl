@@ -1,7 +1,9 @@
 module MADAMEAPI
 
-using Oxygen,
-    HTTP
+using
+    Oxygen,
+    HTTP,
+    Caching
 
 using ADRIA
 
@@ -32,6 +34,11 @@ function start_server()
     serve()
 end
 
-export start_server
+function dev_server()
+    ENV["JULIA_DEBUG"] = "MADAMEAPI"
+    start_server()
+end
+
+export start_server, dev_server
 
 end
