@@ -87,12 +87,11 @@ end
 function get_relative_cover(name::String)
     rs = get_resultset(name)
     rc = ADRIA.metrics.relative_cover(rs)
-    rc_vec = nothing
 
     # mean relative cover across all time and scenarios
     rc_vec = vec(mean(rc, dims=(:scenarios, :timesteps)))
 
-    table = select(rs.loc_data, :UNIQUE_ID)
+    table = DataFrames.select(rs.loc_data, :UNIQUE_ID)
     @assert length(rc_vec) == size(table, 1)
     # assuming that data is aligned, how do we guarantee this?
     table.relative_cover = rc_vec
