@@ -61,8 +61,8 @@ function run_coral_blox(
 
     # Set the distribution parametrisation defined by the user.
     ADRIA.set_factor_bounds.(
-        Ref(dom), 
-        Symbol.(getfield.(model_params, :param_name)), 
+        Ref(dom),
+        Symbol.(getfield.(model_params, :param_name)),
         model_param_to_tuple.(model_params)
     )
 
@@ -74,7 +74,7 @@ end
 
 function setup_model_run_invokation_routes()
     @post "/invoke-run/coralblox" function (req)
-        println(req)
+        @debug req
         response = json(req, InvokeRunResponse)
 
         if isnothing(response)
@@ -86,20 +86,25 @@ function setup_model_run_invokation_routes()
 
         res_dir = Base.get_preferences()["resultsets_dir"]
         new_path = joinpath(res_dir, scenario_name)
+        @debug "Attempting to save to $(new_path)"
 
         if isdir(new_path)
-            return HTTP.Response(400, "Model Run name already used.")
+            return HTTP.Response(400, "Model run name already used.")
         end
+
+        # Pre-setup ADRIA and adjust output directory to MADAME-configured location.
+        ADRIA.setup()
+        ENV["ADRIA_OUTPUT_DIR"] = res_dir
 
         # TODO: If user provides a list of SSPs/RCPs to run, have to loop and combine results
         #       at the end.
         rs = run_coral_blox(response.num_scenarios, response.model_params)
 
-        default_path = joinpath(res_dir, default_save_name(rs))
-        
-        mv(default_path, new_path)
-        # return Page(export_fig(f))
+        # Move results to named location
+        mv(ADRIA.result_location(rs), new_path)
+
         return json(:run_name => scenario_name)
     end
+
     return nothing
 end
