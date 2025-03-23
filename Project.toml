@@ -1,6 +1,6 @@
 name = "MADAMEAPI"
 uuid = "331e1bc6-fc6a-4f70-abdd-4b2ee626e4e0"
-authors = ["Arlo White <a.white@aims.gov.au>"]
+authors = ["Arlo White <a.white@aims.gov.au>", "Daniel Tan", "Takuya Iwanaga"]
 version = "0.1.0"
 
 [deps]
@@ -22,6 +22,7 @@ YAXArrays = "c21b50f5-aa40-41ea-b809-c0f5e47bfa5c"
 
 [compat]
 Bonito = "4.0.1"
+Caching = "0.2.1"
 DiskArrays = "0.4.9"
 GeoMakie = "0.7"
 GraphMakie = "0.5"
