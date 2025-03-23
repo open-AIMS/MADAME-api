@@ -31,4 +31,7 @@ output_dir = "<path/to/ADRIA-results-dir>"
 using MADAMEAPI
 
 start_server()
+
+# Alternatively, use the development server to see debug messages
+# dev_server()
 ```

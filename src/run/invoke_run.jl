@@ -7,7 +7,7 @@ Represents a model parameter and the parametrisation of its sampling distributio
 parameter are either drawn from some type of uniform or triangular distribution.
 
 # Fields
-- `param_name::Stirng`: name of the parameter in the domain model spec.
+- `param_name::String`: name of the parameter in the domain model spec.
 - `third_param_flag::Bool`: true if sampling distribution uses the third parametera.
 - `lower::Float64`: Lower bound parameter of the sampling distribution.
 - `upper::Float64`: Upper bound parameter of the sampling distrbition.

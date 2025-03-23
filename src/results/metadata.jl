@@ -73,7 +73,6 @@ end
 
 function get_modelspec(name::String)
     rs = get_resultset(name)
-    # DataFrames.DataFrame
     return ADRIA.model_spec(rs)
 end
 
