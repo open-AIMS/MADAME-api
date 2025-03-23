@@ -1,13 +1,17 @@
-import ADRIA
-
-using Caching
 using Statistics
 
-using DataFrames,
+using
+    Caching,
+    Oxygen,
+    HTTP
+
+using
+    DataFrames,
     YAXArrays
 
-using Oxygen,
-    HTTP
+using ADRIA
+
+
 
 function get_resultsets()
     dir = Base.get_preferences()["resultsets_dir"]
