@@ -72,16 +72,6 @@ function run_coral_blox(
     return rs
 end
 
-"""
-    default_save_name(rs::ADRIA.ResultSet)::String
-
-ADRIA currently saves results to a directory without accepting use defined location. This 
-function reconstructs the directory name to allow the api to move the directory.
-"""
-function default_save_name(rs::ADRIA.ResultSet)::String
-    return "$(rs.name)__RCPs_$(rs.RCP)__$(rs.invoke_time)"
-end
-
 function setup_model_run_invokation_routes()
     @post "/invoke-run/coralblox" function (req)
         println(req)
