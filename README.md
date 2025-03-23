@@ -14,9 +14,21 @@ Edit `LocalPreferences.toml`, set `resultsets_dir` to your ADRIA.jl Outputs (or 
 Example:
 
 ```toml
-resultsets_dir = "C:\\Users\\awhite\\code\\ADRIA.jl\\sandbox\\Outputs"
+resultsets_dir = "<path/to/ADRIA-results-dir>"
+```
+
+Create or modify the existing ADRIA `config.toml` file such that ADRIA store new model runs
+in the same directory.
+
+```toml
+[results]
+output_dir = "<path/to/ADRIA-results-dir>"
 ```
 
 ## Running
 
-Run `src/main.jl`
+```julia
+using MADAMEAPI
+
+start_server()
+```

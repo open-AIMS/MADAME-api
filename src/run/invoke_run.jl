@@ -1,8 +1,4 @@
-using Bonito
-using WGLMakie, GeoMakie, GraphMakie
-using Oxygen: html # Bonito also exports html
-
-include("../adria/resultsets.jl")
+using MADAMEAPI
 
 """
     ModelParam
@@ -65,8 +61,8 @@ function run_coral_blox(
 
     # Set the distribution parametrisation defined by the user.
     ADRIA.set_factor_bounds.(
-        Ref(dom), 
-        Symbol.(getfield.(model_params, :param_name)), 
+        Ref(dom),
+        Symbol.(getfield.(model_params, :param_name)),
         model_param_to_tuple.(model_params)
     )
 
@@ -76,41 +72,39 @@ function run_coral_blox(
     return rs
 end
 
-"""
-    default_save_name(rs::ADRIA.ResultSet)::String
+function setup_model_run_invokation_routes()
+    @post "/invoke-run/coralblox" function (req)
+        @debug req
+        response = json(req, InvokeRunResponse)
 
-ADRIA currently saves results to a directory without accepting use defined location. This 
-function reconstructs the directory name to allow the api to move the directory.
-"""
-function default_save_name(rs::ADRIA.ResultSet)::String
-    return "$(rs.name)__RCPs_$(rs.RCP)__$(rs.invoke_time)"
-end
+        if isnothing(response)
+            return HTTP.Response(400, "Incorrectly formatted response.")
+        end
 
-@post "/invoke-run/coralblox" function (req)
-    println(req)
-    response = json(req, InvokeRunResponse)
+        # Parse and validate inputs
+        scenario_name = response.run_name
 
-    if isnothing(response)
-        return HTTP.Response(400, "Incorrectly formatted response.")
+        res_dir = Base.get_preferences()["resultsets_dir"]
+        new_path = joinpath(res_dir, scenario_name)
+        @debug "Attempting to save to $(new_path)"
+
+        if isdir(new_path)
+            return HTTP.Response(400, "Model run name already used.")
+        end
+
+        # Pre-setup ADRIA and adjust output directory to MADAME-configured location.
+        ADRIA.setup()
+        ENV["ADRIA_OUTPUT_DIR"] = res_dir
+
+        # TODO: If user provides a list of SSPs/RCPs to run, have to loop and combine results
+        #       at the end.
+        rs = run_coral_blox(response.num_scenarios, response.model_params)
+
+        # Move results to named location
+        mv(ADRIA.result_location(rs), new_path)
+
+        return json(:run_name => scenario_name)
     end
 
-    # Parse and validate inputs
-    scenario_name = response.run_name
-
-    res_dir = Base.get_preferences()["resultsets_dir"]
-    new_path = joinpath(res_dir, scenario_name)
-
-    if isdir(new_path)
-        return HTTP.Response(400, "Model Run name already used.")
-    end
-
-    # TODO: If user provides a list of SSPs/RCPs to run, have to loop and combine results
-    #       at the end.
-    rs = run_coral_blox(response.num_scenarios, response.model_params)
-
-    default_path = joinpath(res_dir, default_save_name(rs))
-    
-    mv(default_path, new_path)
-    # return Page(export_fig(f))
-    return json(:run_name => scenario_name)
+    return nothing
 end
