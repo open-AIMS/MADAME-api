@@ -11,6 +11,8 @@ using TOML
 
 include("util.jl")
 
+include("model/model_details.jl")
+
 include("results/metadata.jl")
 include("results/viz.jl")
 
